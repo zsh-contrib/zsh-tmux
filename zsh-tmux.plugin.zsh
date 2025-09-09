@@ -48,7 +48,8 @@ function _zsh_title__preexec() {
   fi
 
   # Join words for display
-  local cmd_name=${(j: :)words}
+  # local cmd_name=${(j: :)words}
+  local cmd_name="${words[1]}"
   update_title "$cmd_name"
 }
 
