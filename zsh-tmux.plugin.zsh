@@ -12,7 +12,7 @@ function update_title() {
   title=$(print -n -- "%20>...>$title")
   title=${title//$'\n'/}
 
-  printf '\033k%s\' "${(%)title}"
+  printf '\033k%s\033\\' "${(%)title}"
 }
 
 # called just before the prompt is printed
