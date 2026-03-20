@@ -1,6 +1,6 @@
 # zsh-tmux
 
-Automatic tmux window title management for Zsh — live updates as commands run.
+> Automatic tmux window title management for Zsh — live updates as commands run.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![test](https://github.com/zsh-contrib/zsh-tmux/actions/workflows/test.yml/badge.svg)](https://github.com/zsh-contrib/zsh-tmux/actions/workflows/test.yml)
 
