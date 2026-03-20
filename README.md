@@ -1,18 +1,26 @@
 # zsh-tmux
 
-A Zsh plugin for dynamic [tmux](https://github.com/tmux/tmux) window title management based on current shell activity.
+Automatic tmux window title management for Zsh — live updates as commands run.
 
-## Features
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-- Automatic window title updates based on running command
-- Shows "zsh" when idle at prompt
-- Displays command name during execution
-- Resolves job references (`fg`, `%1`) to actual command names
-- Automatic title truncation (max 20 characters)
+Know at a glance what every pane is doing. `zsh-tmux` hooks into Zsh's precmd and preexec to keep your tmux window titles in sync — idle panes show `zsh`, running panes show the command name, and job references like `fg` resolve to the actual process.
 
 ## Requirements
 
-- [tmux](https://github.com/tmux/tmux) - Terminal multiplexer
+- [tmux](https://github.com/tmux/tmux) (`tmux`)
+
+**macOS (Homebrew):**
+
+```bash
+brew install tmux
+```
+
+**Nix:**
+
+```bash
+nix profile install nixpkgs#tmux
+```
 
 ## Installation
 
@@ -45,56 +53,7 @@ source ~/.zsh/plugins/zsh-tmux/zsh-tmux.plugin.zsh
 | Running `npm run build` | `npm` |
 | Long command name | Truncated with `...` |
 
-## API Reference
-
-### Functions
-
-#### `update_title`
-
-Sets the tmux window title with automatic truncation.
-
-```zsh
-update_title <title>
-```
-
-**Arguments:**
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `title` | Yes | Title text to display |
-
-**Behavior:**
-
-- Maximum 20 characters displayed
-- Longer titles truncated with `...` suffix
-- Newlines stripped
-- Percent signs escaped
-
-**Example:**
-
-```zsh
-update_title "vim"
-update_title "very-long-command-name"  # Shows: "very-long-comman..."
-```
-
-### Hook Functions
-
-These are automatically registered and should not be called directly:
-
-#### `_zsh_title__precmd`
-
-Executed before each prompt. Sets title to `zsh`.
-
-#### `_zsh_title__preexec`
-
-Executed before command execution. Sets title to command name.
-
-**Features:**
-
-- Extracts first word of command
-- Resolves job references:
-  - `fg` -> actual job command
-  - `%1`, `%+` -> job command text
+Titles are capped at 20 characters and have newlines stripped and percent signs escaped.
 
 ## Configuration
 
@@ -118,15 +77,41 @@ set -g set-titles on
 set -g set-titles-string "#W"
 ```
 
-## Directory Structure
+## API Reference
 
+### `update_title <title>`
+
+Sets the tmux window title with automatic truncation.
+
+```zsh
+update_title "vim"
+update_title "very-long-command-name"  # shows: "very-long-comman..."
 ```
-zsh-tmux/
-├── zsh-tmux.plugin.zsh   # Main plugin with all functions and hooks
-├── README.md
-└── LICENSE
-```
+
+### Hook Functions
+
+Registered automatically — do not call directly.
+
+| Hook | Trigger | Action |
+|------|---------|--------|
+| `_zsh_title__precmd` | Before each prompt | Sets title to `zsh` |
+| `_zsh_title__preexec` | Before command execution | Sets title to command name |
+
+`_zsh_title__preexec` extracts the first word of the command and resolves job references (`fg`, `%1`, `%+`) to the actual command text.
+
+## The zsh-contrib Ecosystem
+
+| Repo | What it provides |
+|------|-----------------|
+| [zsh-aws](https://github.com/zsh-contrib/zsh-aws) | AWS credential management with aws-vault and tmux |
+| [zsh-eza](https://github.com/zsh-contrib/zsh-eza) | eza with Catppuccin and Rose Pine theming |
+| [zsh-fzf](https://github.com/zsh-contrib/zsh-fzf) | fzf with Catppuccin and Rose Pine theming |
+| [zsh-op](https://github.com/zsh-contrib/zsh-op) | 1Password CLI with secure caching and SSH key management |
+| **zsh-tmux** ← you are here | Automatic tmux window title management |
+| [zsh-vivid](https://github.com/zsh-contrib/zsh-vivid) | vivid LS_COLORS generation with theme support |
 
 ## License
 
-MIT License - see [LICENSE](./LICENSE) for details.
+[MIT](LICENSE) — Copyright (c) 2025 zsh-contrib
+
+<!-- markdownlint-disable-file MD013 -->
