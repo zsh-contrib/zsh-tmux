@@ -2,7 +2,7 @@
 
 > Automatic tmux window title management for Zsh — live updates as commands run.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![test](https://github.com/zsh-contrib/zsh-tmux/actions/workflows/test.yml/badge.svg)](https://github.com/zsh-contrib/zsh-tmux/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![CI](https://github.com/zsh-contrib/zsh-tmux/actions/workflows/ci.yml/badge.svg)](https://github.com/zsh-contrib/zsh-tmux/actions/workflows/ci.yml)
 
 Know at a glance what every pane is doing. `zsh-tmux` hooks into Zsh's precmd and preexec to keep your tmux window titles in sync — idle panes show `zsh`, running panes show the command name, and job references like `fg` resolve to the actual process.
 
