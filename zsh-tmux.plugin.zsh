@@ -1,8 +1,27 @@
 #!/usr/bin/env zsh
 #
+
+# Return 0 when the current terminal understands the DCS title sequence
+# (`\ek<title>\e\\`), which is specific to tmux / GNU screen. Everywhere
+# else the sequence is not recognised and terminals such as Ghostty, Kitty
+# or Apple Terminal render the payload as literal text on the next line,
+# making it look like every command is being echoed back to the user.
+function _zsh_title__in_tmux_or_screen() {
+  [[ -n "$TMUX" ]] && return 0
+  case "$TERM" in
+    tmux*|screen*) return 0 ;;
+  esac
+  return 1
+}
+
 function update_title() {
   emulate -L zsh -o extendedglob
   setopt localoptions no_shwordsplit
+
+  # Only emit the DCS title sequence when it will actually be consumed.
+  # Outside tmux/screen this escape is invalid and leaks the title text
+  # onto the terminal (see issue: commands echoed after Enter).
+  _zsh_title__in_tmux_or_screen || return 0
 
   # parameters
   local title
