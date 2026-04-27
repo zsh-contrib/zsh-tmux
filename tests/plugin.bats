@@ -14,6 +14,7 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
 
 @test "update_title: output contains the title text" {
   run zsh -c '
+    export TMUX=test
     source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
     update_title "vim"
   '
@@ -23,6 +24,7 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
 
 @test "update_title: long title output contains ellipsis" {
   run zsh -c '
+    export TMUX=test
     source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
     update_title "this-is-a-very-long-command-name"
   '
@@ -32,6 +34,7 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
 
 @test "update_title: percent signs in title are escaped" {
   run zsh -c '
+    export TMUX=test
     source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
     update_title "100%done"
   '
@@ -41,12 +44,46 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
 
 @test "update_title: wraps title in tmux escape sequence" {
   run zsh -c '
+    export TMUX=test
     source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
     update_title "zsh"
   '
   [[ "$status" -eq 0 ]]
   # ESC k ... ESC backslash
   [[ "$output" == $'\033k'*$'\033\\'* ]]
+}
+
+@test "update_title: emits nothing when not in tmux or screen" {
+  run zsh -c '
+    unset TMUX
+    export TERM=xterm-256color
+    source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
+    update_title "hermes"
+  '
+  [[ "$status" -eq 0 ]]
+  [[ -z "$output" ]]
+}
+
+@test "update_title: emits title when TERM is screen*" {
+  run zsh -c '
+    unset TMUX
+    export TERM=screen-256color
+    source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
+    update_title "hermes"
+  '
+  [[ "$status" -eq 0 ]]
+  [[ "$output" == *"hermes"* ]]
+}
+
+@test "update_title: emits title when TERM is tmux*" {
+  run zsh -c '
+    unset TMUX
+    export TERM=tmux-256color
+    source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
+    update_title "hermes"
+  '
+  [[ "$status" -eq 0 ]]
+  [[ "$output" == *"hermes"* ]]
 }
 
 # ---------------------------------------------------------------------------
