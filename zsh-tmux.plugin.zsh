@@ -14,14 +14,26 @@ function _zsh_title__in_tmux_or_screen() {
   return 1
 }
 
+# Return 0 when the current terminal is expected to understand the OSC 0
+# window-title sequence (`\e]0;<title>\a`). OSC 0 is the de-facto xterm
+# standard and is honoured by essentially every modern terminal; this
+# check is mostly a safety rail for explicitly dumb terminals (pipes,
+# `TERM=dumb`, plain `linux` console, etc.) where emitting OSC would be
+# at best wasted bytes and at worst leak text into a pager.
+function _zsh_title__supports_osc_title() {
+  [[ -t 1 ]] || return 1
+  case "$TERM" in
+    ''|dumb|linux|cons25|unknown) return 1 ;;
+  esac
+  return 0
+}
+
 function update_title() {
   emulate -L zsh -o extendedglob
   setopt localoptions no_shwordsplit
 
-  # Only emit the DCS title sequence when it will actually be consumed.
-  # Outside tmux/screen this escape is invalid and leaks the title text
-  # onto the terminal (see issue: commands echoed after Enter).
-  _zsh_title__in_tmux_or_screen || return 0
+  # Opt-out: users who set ZSH_TMUX_DISABLE_TITLE=1 get a complete no-op.
+  [[ "${ZSH_TMUX_DISABLE_TITLE:-0}" == 1 ]] && return 0
 
   # parameters
   local title
@@ -31,7 +43,20 @@ function update_title() {
   title=$(print -n -- "%20>...>$title")
   title=${title//$'\n'/}
 
-  printf '\033k%s\033\\' "${(%)title}"
+  # Expand prompt escapes once so both branches see the same text.
+  local expanded=${(%)title}
+
+  if _zsh_title__in_tmux_or_screen; then
+    # Inside tmux/screen: set the tmux window name via DCS. This is the
+    # plugin's original, canonical behaviour and the reason it exists.
+    printf '\033k%s\033\\' "$expanded"
+  elif _zsh_title__supports_osc_title; then
+    # Outside tmux/screen: set the terminal window title via OSC 0, so
+    # users on Ghostty, Kitty, iTerm2, Apple Terminal, Alacritty, etc.
+    # still get live "what is this pane doing" titles without leaking
+    # the DCS escape payload into the buffer.
+    printf '\033]0;%s\a' "$expanded"
+  fi
 }
 
 # called just before the prompt is printed
