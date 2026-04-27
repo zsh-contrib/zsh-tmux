@@ -53,10 +53,51 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   [[ "$output" == $'\033k'*$'\033\\'* ]]
 }
 
-@test "update_title: emits nothing when not in tmux or screen" {
+@test "update_title: emits DCS sequence inside tmux/screen (TMUX set)" {
+  run zsh -c '
+    export TMUX=test
+    unset TERM
+    source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
+    update_title "hermes"
+  '
+  [[ "$status" -eq 0 ]]
+  # ESC k hermes ESC backslash
+  [[ "$output" == $'\033k'*"hermes"*$'\033\\'* ]]
+}
+
+@test "update_title: emits OSC 0 sequence outside tmux/screen" {
   run zsh -c '
     unset TMUX
     export TERM=xterm-256color
+    source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
+    # Force the OSC path: under bats, stdout is not a tty, so stub the
+    # capability check so we can observe what update_title emits.
+    _zsh_title__supports_osc_title() { return 0; }
+    update_title "hermes"
+  '
+  [[ "$status" -eq 0 ]]
+  # ESC ] 0 ; hermes BEL
+  [[ "$output" == $'\033]0;'*"hermes"*$'\a'* ]]
+  # And must NOT contain the DCS sequence
+  [[ "$output" != *$'\033k'* ]]
+}
+
+@test "update_title: emits nothing on dumb terminal outside tmux/screen" {
+  run zsh -c '
+    unset TMUX
+    export TERM=dumb
+    source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
+    _zsh_title__supports_osc_title() { return 1; }
+    update_title "hermes"
+  '
+  [[ "$status" -eq 0 ]]
+  [[ -z "$output" ]]
+}
+
+@test "update_title: ZSH_TMUX_DISABLE_TITLE=1 silences everything" {
+  run zsh -c '
+    export TMUX=test
+    export ZSH_TMUX_DISABLE_TITLE=1
     source "$PLUGIN_DIR/zsh-tmux.plugin.zsh"
     update_title "hermes"
   '
@@ -64,7 +105,7 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   [[ -z "$output" ]]
 }
 
-@test "update_title: emits title when TERM is screen*" {
+@test "update_title: emits DCS when TERM is screen*" {
   run zsh -c '
     unset TMUX
     export TERM=screen-256color
@@ -72,10 +113,10 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
     update_title "hermes"
   '
   [[ "$status" -eq 0 ]]
-  [[ "$output" == *"hermes"* ]]
+  [[ "$output" == $'\033k'*"hermes"*$'\033\\'* ]]
 }
 
-@test "update_title: emits title when TERM is tmux*" {
+@test "update_title: emits DCS when TERM is tmux*" {
   run zsh -c '
     unset TMUX
     export TERM=tmux-256color
@@ -83,7 +124,7 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
     update_title "hermes"
   '
   [[ "$status" -eq 0 ]]
-  [[ "$output" == *"hermes"* ]]
+  [[ "$output" == $'\033k'*"hermes"*$'\033\\'* ]]
 }
 
 # ---------------------------------------------------------------------------

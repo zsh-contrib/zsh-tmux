@@ -55,6 +55,10 @@ source ~/.zsh/plugins/zsh-tmux/zsh-tmux.plugin.zsh
 
 Titles are capped at 20 characters and have newlines stripped and percent signs escaped.
 
+**Outside tmux:** the plugin falls back to OSC 0 (`ESC ] 0 ; <title> BEL`), the xterm-standard window-title sequence supported by Ghostty, Kitty, iTerm2, Apple Terminal, Alacritty, WezTerm, etc. — so non-tmux users get live window titles too.
+
+**On `TERM=dumb` / pipes / non-interactive shells:** no escape is emitted.
+
 ## Configuration
 
 ### Conditional Loading
@@ -65,6 +69,14 @@ Only load when inside tmux:
 if [[ -n "$TMUX" ]]; then
   zinit load zsh-contrib/zsh-tmux
 fi
+```
+
+### Disabling titles entirely
+
+Set `ZSH_TMUX_DISABLE_TITLE=1` before the plugin is sourced (or any time before `update_title` runs) to suppress all title updates — useful when another plugin or your prompt is already managing the window title.
+
+```zsh
+export ZSH_TMUX_DISABLE_TITLE=1
 ```
 
 ### Tmux Configuration
