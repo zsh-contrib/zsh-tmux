@@ -14,10 +14,11 @@
 # shells via ssh, bare `screen`) are all covered.
 #
 # Why this matters: the `ESC k ... ST` sequence is a screen/tmux-private
-# control, not part of the ECMA-48 string-control family (DCS/OSC/APC/PM
-# /SOS all use distinct introducers). Terminals that aren't screen or
-# tmux don't recognise `ESC k` and render the payload as literal text,
-# making every command look like it's being echoed back to the user.
+# control, not part of the ECMA-48 string-control family
+# (DCS/OSC/APC/PM/SOS all use distinct introducers). Terminals that
+# aren't screen or tmux don't recognise `ESC k` and render the payload
+# as literal text, making every command look like it's being echoed back
+# to the user.
 function _zsh_title__in_tmux_or_screen() {
   [[ -n "$TMUX" ]] && return 0
   case "$TERM" in
