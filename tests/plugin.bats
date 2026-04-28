@@ -53,7 +53,7 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   [[ "$output" == $'\033k'*$'\033\\'* ]]
 }
 
-@test "update_title: emits DCS sequence inside tmux/screen (TMUX set)" {
+@test "update_title: emits screen/tmux title escape inside tmux/screen (TMUX set)" {
   run zsh -c '
     export TMUX=test
     unset TERM
@@ -78,7 +78,7 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   [[ "$status" -eq 0 ]]
   # ESC ] 0 ; hermes BEL
   [[ "$output" == $'\033]0;'*"hermes"*$'\a'* ]]
-  # And must NOT contain the DCS sequence
+  # And must NOT contain the screen/tmux title escape introducer (ESC k)
   [[ "$output" != *$'\033k'* ]]
 }
 
@@ -105,7 +105,7 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   [[ -z "$output" ]]
 }
 
-@test "update_title: emits DCS when TERM is screen*" {
+@test "update_title: emits screen/tmux title escape when TERM is screen*" {
   run zsh -c '
     unset TMUX
     export TERM=screen-256color
@@ -116,7 +116,7 @@ PLUGIN_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
   [[ "$output" == $'\033k'*"hermes"*$'\033\\'* ]]
 }
 
-@test "update_title: emits DCS when TERM is tmux*" {
+@test "update_title: emits screen/tmux title escape when TERM is tmux*" {
   run zsh -c '
     unset TMUX
     export TERM=tmux-256color
