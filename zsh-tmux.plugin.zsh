@@ -1,11 +1,23 @@
 #!/usr/bin/env zsh
 #
 
-# Return 0 when the current terminal understands the DCS title sequence
-# (`\ek<title>\e\\`), which is specific to tmux / GNU screen. Everywhere
-# else the sequence is not recognised and terminals such as Ghostty, Kitty
-# or Apple Terminal render the payload as literal text on the next line,
-# making it look like every command is being echoed back to the user.
+# Return 0 when the environment indicates the shell is running inside a
+# tmux or GNU screen session, i.e. when emitting the screen/tmux
+# title-setting escape (`ESC k <title> ESC \`, introduced by `ESC k` and
+# terminated by ST) is expected to be consumed by the multiplexer.
+#
+# This is an environment-based heuristic, not a terminal capability
+# probe: a user could in principle export TERM=tmux-256color or
+# TERM=screen-256color without actually being inside tmux/screen, in
+# which case the payload would still leak. Those configurations are
+# self-inflicted; the common cases (real tmux child processes, nested
+# shells via ssh, bare `screen`) are all covered.
+#
+# Why this matters: the `ESC k ... ST` sequence is a screen/tmux-private
+# control, not part of the ECMA-48 string-control family (DCS/OSC/APC/PM
+# /SOS all use distinct introducers). Terminals that aren't screen or
+# tmux don't recognise `ESC k` and render the payload as literal text,
+# making every command look like it's being echoed back to the user.
 function _zsh_title__in_tmux_or_screen() {
   [[ -n "$TMUX" ]] && return 0
   case "$TERM" in
@@ -47,14 +59,16 @@ function update_title() {
   local expanded=${(%)title}
 
   if _zsh_title__in_tmux_or_screen; then
-    # Inside tmux/screen: set the tmux window name via DCS. This is the
-    # plugin's original, canonical behaviour and the reason it exists.
+    # Inside tmux/screen: emit the screen/tmux title-setting escape
+    # (`ESC k <title> ESC \`). This is the plugin's original behaviour
+    # and the reason it exists; tmux/screen consume the sequence and
+    # update the window name.
     printf '\033k%s\033\\' "$expanded"
   elif _zsh_title__supports_osc_title; then
     # Outside tmux/screen: set the terminal window title via OSC 0, so
     # users on Ghostty, Kitty, iTerm2, Apple Terminal, Alacritty, etc.
     # still get live "what is this pane doing" titles without leaking
-    # the DCS escape payload into the buffer.
+    # the screen/tmux title escape into the buffer.
     printf '\033]0;%s\a' "$expanded"
   fi
 }
